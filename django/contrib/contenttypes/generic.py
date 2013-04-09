@@ -379,7 +379,7 @@ class BaseGenericInlineFormSet(BaseModelFormSet):
     """
 
     def __init__(self, data=None, files=None, instance=None, save_as_new=None,
-                 prefix=None, queryset=None):
+                 prefix=None, queryset=None, **kwargs):
         # Avoid a circular import.
         from django.contrib.contenttypes.models import ContentType
         opts = self.model._meta
@@ -399,7 +399,8 @@ class BaseGenericInlineFormSet(BaseModelFormSet):
             })
         super(BaseGenericInlineFormSet, self).__init__(
             queryset=qs, data=data, files=files,
-            prefix=prefix
+            prefix=prefix,
+            **kwargs
         )
 
     @classmethod
