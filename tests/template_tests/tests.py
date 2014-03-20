@@ -1486,6 +1486,10 @@ class TemplateTests(TestCase):
             'i18n38': ('{% load i18n custom %}{% get_language_info for "de"|noop:"x y" as l %}{{ l.code }}: {{ l.name }}/{{ l.name_local }} bidi={{ l.bidi }}', {}, 'de: German/Deutsch bidi=False'),
             'i18n38_2': ('{% load i18n custom %}{% get_language_info_list for langcodes|noop:"x y" as langs %}{% for l in langs %}{{ l.code }}: {{ l.name }}/{{ l.name_local }} bidi={{ l.bidi }}; {% endfor %}', {'langcodes': ['it', 'no']}, 'it: Italian/italiano bidi=False; no: Norwegian/norsk bidi=False; '),
 
+            #blocktrans tag with asvar var
+            'i18n39': ('{% load i18n %}{% blocktrans asvar var %}{{ anton }}{% endblocktrans %}{{ var }}{{ var }}', {'anton': b'\xc3\x85'}, "ÅÅ"),
+            'legacyi18n39': ('{% load i18n %}{% blocktrans with anton|lower as berta asvar var %}{{ berta }}{% endblocktrans %}{{ var }}', {'anton': b'\xc3\x85'}, 'å'),
+
             ### HANDLING OF TEMPLATE_STRING_IF_INVALID ###################################
 
             'invalidstr01': ('{{ var|default:"Foo" }}', {}, ('Foo', 'INVALID')),

@@ -99,7 +99,7 @@ class TranslateNode(Node):
 class BlockTranslateNode(Node):
 
     def __init__(self, extra_context, singular, plural=None, countervar=None,
-            counter=None, message_context=None, trimmed=False):
+            counter=None, message_context=None, trimmed=False, asvar=None):
         self.extra_context = extra_context
         self.singular = singular
         self.plural = plural
@@ -107,6 +107,7 @@ class BlockTranslateNode(Node):
         self.counter = counter
         self.message_context = message_context
         self.trimmed = trimmed
+        self.asvar = asvar
 
     def render_token_list(self, tokens):
         result = []
@@ -169,7 +170,11 @@ class BlockTranslateNode(Node):
                     "string returned by gettext: %r using %r" % (result, data))
             with translation.override(None):
                 result = self.render(context, nested=True)
-        return result
+        if self.asvar:
+            context[self.asvar] = result
+            return ''
+        else:
+            return result
 
 
 class LanguageNode(Node):
@@ -420,11 +425,24 @@ def do_block_translate(parser, token):
 
     This is equivalent to calling pgettext/npgettext instead of
     (u)gettext/(u)ngettext.
+
+    It is possible to store the translated string into a variable::
+
+        {% blocktrans with bar=foo|filter boo=baz|filter asvar var %}
+        This is {{ bar }} and {{ boo }}.
+        {% endblocktrans %}
+        {{ var }}
     """
     bits = token.split_contents()
 
     options = {}
     remaining_bits = bits[1:]
+
+    asvar = None
+    if len(remaining_bits) >= 2 and remaining_bits[-2] == "asvar":
+        asvar = remaining_bits.pop()
+        remaining_bits.pop()
+
     while remaining_bits:
         option = remaining_bits.pop(0)
         if option in options:
@@ -489,7 +507,8 @@ def do_block_translate(parser, token):
         raise TemplateSyntaxError("'blocktrans' doesn't allow other block tags (seen %r) inside it" % token.contents)
 
     return BlockTranslateNode(extra_context, singular, plural, countervar,
-                              counter, message_context, trimmed=trimmed)
+                              counter, message_context, trimmed=trimmed,
+                              asvar=asvar)
 
 
 @register.tag
